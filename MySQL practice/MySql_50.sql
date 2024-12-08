@@ -147,10 +147,25 @@ using (tno)
 where tname in ('諶燕'));
 
 # 11. 查詢兩門以上不及格課程的同學的學號及其平均成績
+select sno, avg(score) 
+from student
+join sc
+using (sno)
+where score < 60
+group by sno
+having count(score)>=2;
 
 # 12. 檢索'c004'課程分數小於60,按分數降序排列的同學學號
+select sno
+from sc
+where cno = 'c004' and score < 60 
+order by score desc;
 
 # 13. 查詢'c001'課程比'c002'課程成績高的所有學生的學號
+select a.sno
+from sc a, sc b
+where a.sno = b.sno and a.cno = 'c001' and b.cno = 'c002' and a.score > b.score
+;
 
 # 14. 查詢平均成績大於60 分的同學的學號和平均成績
 
