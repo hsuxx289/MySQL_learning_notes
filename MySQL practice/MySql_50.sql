@@ -168,10 +168,25 @@ where a.sno = b.sno and a.cno = 'c001' and b.cno = 'c002' and a.score > b.score
 ;
 
 # 14. 查詢平均成績大於60 分的同學的學號和平均成績
+select sno, avg(score)
+from student
+left join sc
+using (sno)
+group by sno
+having avg(score) > 60;
 
 # 15. 查詢所有同學的學號.姓名.選課數.總成績
+select sno, sname, count(cno), sum(score)
+from student
+left join sc
+using (sno)
+group by sno
+;
 
 # 16. 查詢姓”劉”的老師的個數
+select count(*)
+from teacher
+where tname like "劉%";
 
 # 17. 查詢只學”諶燕”老師所教的課的同學的學號:姓名
 
@@ -184,6 +199,11 @@ where a.sno = b.sno and a.cno = 'c001' and b.cno = 'c002' and a.score > b.score
 # 21. 查詢所有課程成績小於60 分的同學的學號.姓名
 
 # 22. 查詢沒有學課的同學的學號.姓名
+select sno, sname
+from student
+left join sc
+using (sno)
+where cno is null;
 
 # 23. 查詢與學號為”s001″一起上過課的同學的學號和姓名
 
