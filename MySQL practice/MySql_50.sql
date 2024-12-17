@@ -189,14 +189,63 @@ from teacher
 where tname like "劉%";
 
 # 17. 查詢只學”諶燕”老師所教的課的同學的學號:姓名
+select distinct sno,sname
+from sc
+left join student
+using (sno)
+where sno not in
+(select sno
+from sc
+where cno not in
+(select cno
+from course
+left join teacher
+using(tno)
+where tname='諶燕'));
 
 # 18. 查詢學過”c001″並且也學過編號”c002″課程的同學的學號.姓名
+select sno, sname
+from student
+where sno in (select a.sno from sc a, sc b where a.sno = b.sno and a.cno = 'c001' and b.cno = 'c002');
 
 # 19. 查詢學過”諶燕”老師所教的所有課的同學的學號:姓名
+select sno,sname
+from sc
+left join student
+using (sno)
+left join course
+using (cno)
+left join teacher
+using (tno)
+where tname = '諶燕'
+group by sno
+having count(*) = 
+(select count(*)
+from course
+left join teacher
+using (tno)
+where tname = '諶燕');
 
 # 20. 查詢課程編號”c004″的成績比課程編號”c001″和”c002″課程低的所有同學的學號.姓名
+select sno,sname
+from student
+where sno in
+(select a.sno
+from sc a, sc b, sc c
+where a.sno = b.sno
+and b.sno = c.sno
+and a.cno = 'c004'
+and b.cno = 'c001'
+and c.cno = 'c002'
+and a.score < b.score
+and a.score < c.score);
 
 # 21. 查詢所有課程成績小於60 分的同學的學號.姓名
+select *
+from sc
+left join student
+using (sno)
+where score < 60;
 
 # 22. 查詢沒有學課的同學的學號.姓名
 select sno, sname
@@ -206,6 +255,24 @@ using (sno)
 where cno is null;
 
 # 23. 查詢與學號為”s001″一起上過課的同學的學號和姓名
+select distinct sno, sname
+from sc
+left join student
+using (sno)
+where sno in (
+select b.sno
+from sc a, sc b
+where a.sno = 's001' and b.sno != 's001'
+and a.cno = b.cno);
+
+select distinct sno, sname
+from sc
+left join student
+using (sno)
+where cno in
+(select cno
+from sc
+where sno = 's001') and sno != 's001';
 
 # 24. 查詢跟學號為”s005″所修課程完全一樣的同學的學號和姓名
 
