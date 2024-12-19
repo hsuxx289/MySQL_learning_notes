@@ -275,18 +275,57 @@ from sc
 where sno = 's001') and sno != 's001';
 
 # 24. 查詢跟學號為”s005″所修課程完全一樣的同學的學號和姓名
+select * from sc
+left join student
+using (sno)
+where sno not in (
+select sno from sc 
+left join student
+using (sno)
+where cno not in(
+select cno from sc where sno = "s005"));
 
 # 25. 查詢各科成績最高和最低的分 顯示:課程ID,最高分,最低分
+select cno,max(score),min(score) 
+from sc
+group by cno
+order by cno;
 
 # 26. 按各科平均成績和及格率的百分數 照平均從低到高顯示
+select cno,avg(score), round((select count(cno) from sc where score > 60)/count(cno)*10) 及格率
+from sc
+group by cno
+order by avg(score);
 
 # 27. 查詢每個課程的老師及平均分從高到低顯示 老師名稱,課程名稱,平均分數
+select cname,tname,avg(score)
+from sc
+left join course
+using (cno)
+left join teacher
+using (tno)
+group by tname, cname;
 
 # 28. 統計列印各科成績,各分數段人數:課程ID,課程名稱,verygood[100-86], good[85-71], bad[<60]
+
+SELECT sc.cno, course.cname,
+SUM(CASE WHEN score BETWEEN 86 AND 100 THEN 1 ELSE 0 END)verygood,
+SUM(CASE WHEN score BETWEEN 71 AND 85 THEN 1 ELSE 0 END)good,
+SUM(CASE WHEN score < 60 THEN 1 ELSE 0 END)bad
+FROM sc, course
+WHERE sc.cno=course.cno
+GROUP BY sc.cno, course.cname;
+
+select *
+from sc,course;
 
 # 29. 查詢各科成績前三名的記錄:(不考慮成績並列情況)
 
 # 30. 查詢每門課程被選修的學生數
+select cno, count(sno)
+from sc
+group by cno
+order by cno;
 
 # 31. 查詢出只選修了兩門課程的全部學生的學號和姓名
 
@@ -305,6 +344,9 @@ where sno = 's001') and sno != 's001';
 # 38. 檢索每課程第二高分的學號 分數(考慮成績並列)
 
 # 39. 求選了課程的學生人數
+select count(*) from 
+(select distinct sno
+from sc) as sount;
 
 # 40. 查詢選修”諶燕”老師所授課程的學生中,成績最高的學生姓名及其成績
 
@@ -319,8 +361,14 @@ where sno = 's001') and sno != 's001';
 # 45. 查詢上過所有老師教的課程的學生 學號,學生名
 
 # 46. 查詢包含數字的課程名
+SELECT cname
+FROM course
+WHERE cname REGEXP '[0-9]';
 
 # 47. 查詢只有英文的課程名
+SELECT cname
+FROM course
+WHERE cname REGEXP '^([a-z]|[A-Z])+$';
 
 # 48. 查詢所有學生的平均成績 並排名 , 學號,學生名,排名,平均成績(不考慮並列) 對平均成績高到低及學號低到高排序
 
