@@ -321,6 +321,11 @@ from sc,course;
 
 # 29. 查詢各科成績前三名的記錄:(不考慮成績並列情況)
 
+SELECT *
+FROM sc x
+WHERE (SELECT COUNT(*) FROM sc y WHERE x.cno = y.cno AND x.score < y.score)<3 
+ORDER BY cno,score DESC;
+
 # 30. 查詢每門課程被選修的學生數
 select cno, count(sno)
 from sc
@@ -328,8 +333,20 @@ group by cno
 order by cno;
 
 # 31. 查詢出只選修了兩門課程的全部學生的學號和姓名
+select sno,sname
+from student
+join sc
+using (sno)
+group by sno
+having count(*) = 2;
 
 # 32. 查詢男生.女生人數 32-1. 查詢每個課程的男生女生總數
+SELECT cno,cname,COALESCE(boy,0)AS boy,COALESCE(girl,0)AS girl
+FROM course 
+LEFT JOIN (SELECT cno,COUNT(*)AS boy FROM `course` JOIN sc USING(cno) JOIN student USING(sno)
+GROUP BY cno,ssex HAVING ssex = '男' ORDER BY cno)AS cb USING(cno)
+LEFT JOIN (SELECT cno,COUNT(*)AS girl FROM `course` JOIN sc USING(cno) JOIN student USING(sno)
+GROUP BY cno,ssex HAVING ssex = '女' ORDER BY cno)AS cg USING(cno);
 
 # 33. 查詢同名同姓學生名單,並統計同名人數
 
