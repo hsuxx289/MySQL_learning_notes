@@ -345,20 +345,57 @@ SELECT cno,cname,COALESCE(boy,0)AS boy,COALESCE(girl,0)AS girl
 FROM course 
 LEFT JOIN (SELECT cno,COUNT(*)AS boy FROM `course` JOIN sc USING(cno) JOIN student USING(sno)
 GROUP BY cno,ssex HAVING ssex = '男' ORDER BY cno)AS cb USING(cno)
-LEFT JOIN (SELECT cno,COUNT(*)AS girl FROM `course` JOIN sc USING(cno) JOIN student USING(sno)
+LEFT JOIN (SELECT cno,employee,COUNT(*)AS girl FROM `course` JOIN sc USING(cno) JOIN student USING(sno)
 GROUP BY cno,ssex HAVING ssex = '女' ORDER BY cno)AS cg USING(cno);
 
 # 33. 查詢同名同姓學生名單,並統計同名人數
 
+select sname, count(*)
+from student
+group by sname
+having count(*) > 1;
+
 # 34. 查詢年紀最小跟最大的學生名單(注:Student 表中Sage 列的型別是int)
 
+SELECT *
+FROM student
+WHERE sage = (SELECT MAX(sage) FROM student)
+   OR sage = (SELECT MIN(sage) FROM student);
+
 # 35. 查詢每門課程的平均成績,結果按平均成績升序排列,平均成績相同時,按課程號降序排列
+select cno, avg(score) 
+from sc 
+group by cno 
+order by avg(score), cno desc;
 
 # 36. 查詢平均成績大於85 的所有學生的學號.姓名和平均成績
 
+select sno,sname, avg(score) 
+from sc 
+left join student 
+using (sno) 
+group by sno 
+having avg(score)>85;
+
 # 37. 查詢課程編號為c001 且課程成績在80 分以上的學生的學號和姓名
 
+select sno, sname
+from sc
+left join student
+using (sno)
+where cno = 'c001' and score > 80; 
+
 # 38. 檢索每課程第二高分的學號 分數(考慮成績並列)
+
+
+WITH RankedScores AS (
+  SELECT *, ROW_NUMBER() OVER (PARTITION BY cno ORDER BY score DESC) AS ranking
+  FROM sc
+)
+SELECT *
+FROM RankedScores
+WHERE ranking = 2
+ORDER BY cno;
 
 # 39. 求選了課程的學生人數
 select count(*) from 
@@ -367,13 +404,46 @@ from sc) as sount;
 
 # 40. 查詢選修”諶燕”老師所授課程的學生中,成績最高的學生姓名及其成績
 
+select sname, score
+from sc
+left join student
+using (sno)
+left join course
+using (cno)
+left join teacher
+using (tno)
+where tname = '諶燕' and
+score = (
+select max(score)
+from sc 
+left join course
+using (cno)
+left join teacher
+using (tno)
+where tname = '諶燕');
+
 # 41. 查詢不同課程成績有相同的學生的學號.課程號.學生成績
+
+select distinct x.sno,x.cno,x.score 
+from sc x, sc y 
+where x.sno = y.sno 
+and x.cno != y.cno 
+and x.score = y.score;
 
 # 42. 所有課程排名成績(不考慮並列) 學號,課程號,排名,成績 照課程,排名排序
 
 # 43. 所有課程排名成績(考慮並列) 學號,課程號,排名,成績 照課程,排名排序
 
 # 44. 做所有學生顯示學生名稱,課程名稱,成績,老師名稱的視圖
+
+select sname, cname, score, tname
+from course
+left join sc
+using (cno)
+left join student
+using (sno)
+left join teacher
+using (tno);
 
 # 45. 查詢上過所有老師教的課程的學生 學號,學生名
 
@@ -392,3 +462,11 @@ WHERE cname REGEXP '^([a-z]|[A-Z])+$';
 # 49. 查詢所有學生的平均成績 並排名 , 學號,學生名,排名,平均成績(考慮並列) 對平均成績高到低及學號低到高排序
 
 # 50. 查詢課程有學生的成績是其他人成績兩倍的學號 學生名
+
+SELECT DISTINCT x.sno, student.sname
+FROM sc x
+LEFT JOIN student USING(sno)
+JOIN sc y 
+    ON x.cno = y.cno 
+    AND x.sno != y.sno 
+    AND x.score / 2 > y.score;
