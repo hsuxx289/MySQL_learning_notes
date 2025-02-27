@@ -1,3 +1,4 @@
+```
 .
 |-- Lecture
 |   |-- Basic Query.sql
@@ -25,3 +26,4 @@
     |-- homework.sql
     |-- titanic_full_data.csv
     `-- titanic_full_data.txt
+```
