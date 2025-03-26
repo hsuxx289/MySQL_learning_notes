@@ -83,7 +83,7 @@ SELECT CONCAT(UPPER(LEFT(first_name, 1)),
 	LOWER(SUBSTRING(first_name, 2))) AS formatted_name
 FROM customers;
 
-# 2-9
+# practice
 # 回傳customer 表格中的所有欄位資料
 SELECT * FROM farmers_market.customer;
 
