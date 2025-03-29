@@ -446,7 +446,11 @@ left join teacher
 using (tno);
 
 # 45. 查詢上過所有老師教的課程的學生 學號,學生名
-
+SELECT sno,sname
+FROM sc LEFT JOIN course USING(cno) LEFT JOIN student USING(sno) 
+GROUP BY sno
+HAVING GROUP_CONCAT(DISTINCT tno ORDER BY tno) = (SELECT GROUP_CONCAT(tno ORDER BY tno) FROM teacher);
+ 
 # 46. 查詢包含數字的課程名
 SELECT cname
 FROM course
@@ -458,11 +462,20 @@ FROM course
 WHERE cname REGEXP '^([a-z]|[A-Z])+$';
 
 # 48. 查詢所有學生的平均成績 並排名 , 學號,學生名,排名,平均成績(不考慮並列) 對平均成績高到低及學號低到高排序
+SELECT scc.sno,scc.sname,@curRank:=@curRank+1 AS rank,scc.avgscore
+FROM(SELECT sc.sno,student.sname,AVG(sc.score)AS avgscore
+FROM sc LEFT JOIN student USING(sno)
+GROUP BY sc.sno)AS scc,(SELECT @curRank:=0) AS r
+ORDER BY scc.avgscore DESC,sno;
 
 # 49. 查詢所有學生的平均成績 並排名 , 學號,學生名,排名,平均成績(考慮並列) 對平均成績高到低及學號低到高排序
+SELECT scavg.sno,scavg.sname,CASE WHEN @prevRank=scavg.avgscore THEN @curRank
+WHEN @prevRank:=scavg.avgscore THEN @curRank:=@curRank+1 END AS rank,scavg.avgscore
+FROM  (SELECT sno,sname,AVG(score) AS avgscore FROM sc LEFT JOIN student USING(sno) GROUP BY sno)AS scavg , 
+(SELECT @curRank:=0,@prevRank:=NULL) AS r
+ORDER BY scavg.avgscore DESC,scavg.sno;
 
 # 50. 查詢課程有學生的成績是其他人成績兩倍的學號 學生名
-
 SELECT DISTINCT x.sno, student.sname
 FROM sc x
 LEFT JOIN student USING(sno)
