@@ -21,7 +21,7 @@ FROM course AS c
 		ON c.tno = t.tno
 WHERE tname = '諶燕';
 
-#查詢所有老師所帶 的課程 數量
+#4 查詢所有老師所帶 的課程 數量
 SELECT 
 	tname,
     count(*)
@@ -30,12 +30,12 @@ FROM course AS c
 		ON c.tno = t.tno
 GROUP BY tname;
 
-#查詢姓”張”的學生名單
+#5 查詢姓”張”的學生名單
 SELECT * 
 FROM student
 WHERE sname like '張%';
 
-#查詢課程名稱為'Oracle'且分數低於60 的學號和分數
+#6 查詢課程名稱為'Oracle'且分數低於60 的學號和分數
 SELECT
 	sno,
     sname 
@@ -58,17 +58,75 @@ FROM student AS s
 	LEFT JOIN course AS c
 		ON sc.cno = c.cno;
 
-#查詢任何一門課程成績在70 分以上的學生姓名.課程名稱和分數
+#8 查詢任何一門課程成績在70 分以上的學生姓名.課程名稱和分數
+SELECT
+	sc.sno,
+    s.sname,
+    c.cname,
+    sc.score
+FROM sc
+	LEFT JOIN student AS s
+		ON sc.sno = s.sno
+	LEFT JOIN course AS c
+		ON sc.cno = c.cno
+WHERE sc.score >= 70;
 
-#查詢不及格的課程,並按課程號從大到小排列 學號,課程號,課程名,分數
+#9 查詢不及格的課程,並按課程號從大到小排列 學號,課程號,課程名,分數
+SELECT
+	sc.sno,
+    c.cno,
+    c.cname,
+    sc.score
+FROM sc
+	LEFT JOIN student AS s
+		ON sc.sno = s.sno
+	LEFT JOIN course AS c
+		ON sc.cno = c.cno
+WHERE sc.score < 60
+ORDER BY c.cno DESC;
 
-#查詢沒學過”諶燕”老師講授的任一門課程的學號,學生姓名
+#10 查詢沒學過”諶燕”老師講授的任一門課程的學號,學生姓名
+SELECT 
+	sno,
+    sname
+FROM student
+WHERE sno NOT IN
+(
+	SELECT DISTINCT s.sno
+	FROM course AS c
+		LEFT JOIN teacher AS t
+			ON c.tno = t.tno
+		LEFT JOIN sc
+			ON c.cno = sc.cno
+		LEFT JOIN student AS s
+			ON sc.sno = s.sno
+	WHERE t.tname = '諶燕'
+);
 
-#查詢兩門以上不及格課程的同學的學號及其平均成績
+#11 查詢兩門以上不及格課程的同學的學號及其平均成績
+SELECT 
+  sc.sno,
+  ROUND(AVG(sc.score), 2) AS avg_score
+FROM sc
+WHERE sc.sno IN (
+  SELECT sno
+  FROM sc
+  WHERE score < 60
+  GROUP BY sno
+  HAVING COUNT(*) >= 2
+)
+GROUP BY sc.sno;
 
 #檢索'c004'課程分數小於60,按分數降序排列的同學學號
+SELECT sno
+FROM sc
+WHERE cno = 'c004'
+	AND score < 60
+ORDER BY sno DESC;
 
 #查詢'c001'課程比'c002'課程成績高的所有學生的學號
+
+
 
 #查詢平均成績大於60 分的同學的學號和平均成績
 
@@ -140,7 +198,23 @@ FROM student AS s
 #查詢只有英文的課程名
 
 #查詢所有學生的平均成績 並排名 , 學號,學生名,排名,平均成績(不考慮並列) 對平均成績高到低及學號低到高排序
-
+SELECT 
+  s.sno,
+  s.sname,
+  ROW_NUMBER() OVER (ORDER BY AVG(sc.score) DESC, s.sno ASC) AS rank1,
+  ROUND(AVG(sc.score), 2) AS avg_score
+FROM student s
+JOIN sc ON s.sno = sc.sno
+GROUP BY s.sno, s.sname
+ORDER BY rank1;
 #查詢所有學生的平均成績 並排名 , 學號,學生名,排名,平均成績(考慮並列) 對平均成績高到低及學號低到高排序
-
+SELECT 
+  s.sno,
+  s.sname,
+  DENSE_RANK() OVER (ORDER BY AVG(sc.score) DESC) AS rank1,
+  ROUND(AVG(sc.score), 2) AS avg_score
+FROM student s
+JOIN sc ON s.sno = sc.sno
+GROUP BY s.sno, s.sname
+ORDER BY rank1;
 #查詢課程有學生的成績是其他人成績兩倍的學號 學生名

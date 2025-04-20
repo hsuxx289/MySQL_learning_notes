@@ -146,7 +146,7 @@ left join teacher
 using (tno)
 where tname in ('諶燕'));
 
-# 11. 查詢兩門以上不及格課程的同學的學號及其平均成績
+# 11. 查詢兩門以上不及格課程的同學的學號及其平均成績 (答案是錯的 只算了沒過的課程平均)
 select sno, avg(score) 
 from student
 join sc
@@ -431,8 +431,23 @@ and x.cno != y.cno
 and x.score = y.score;
 
 # 42. 所有課程排名成績(不考慮並列) 學號,課程號,排名,成績 照課程,排名排序
+# 古早時期沒有窗口函數的寫法 (請勿參考)
+SELECT sc.sno,sc.cno,
+CASE WHEN @pre_parent_code=sc.cno THEN @curRank:=@curRank+1 
+WHEN @pre_parent_code:=sc.cno THEN  @curRank:=1 
+ELSE @curRank:=1
+END AS rank,sc.score
+FROM (select @curRank:=0,@pre_parent_code:='') r,sc
+ORDER BY sc.cno,sc.score DESC
 
 # 43. 所有課程排名成績(考慮並列) 學號,課程號,排名,成績 照課程,排名排序
+# 古早時期沒有窗口函數的寫法 (請勿參考)
+SELECT sc.sno,
+CASE WHEN @pre_parent_code=sc.cno 
+THEN (CASE WHEN @prefontscore=sc.score THEN @curRank WHEN @prefontscore:=sc.score THEN @curRank:=@curRank+1 END)
+WHEN  @prefontscore:=sc.score THEN  @curRank:=1 END AS rank ,sc.score,@pre_parent_code:=sc.cno AS cno
+FROM (SELECT @curRank:=0,@pre_parent_code:='',@prefontscore:=NULL) r,sc
+ORDER BY sc.cno,sc.score DESC
 
 # 44. 做所有學生顯示學生名稱,課程名稱,成績,老師名稱的視圖
 
@@ -462,6 +477,7 @@ FROM course
 WHERE cname REGEXP '^([a-z]|[A-Z])+$';
 
 # 48. 查詢所有學生的平均成績 並排名 , 學號,學生名,排名,平均成績(不考慮並列) 對平均成績高到低及學號低到高排序
+# 古早時期沒有窗口函數的寫法 (請勿參考)
 SELECT scc.sno,scc.sname,@curRank:=@curRank+1 AS rank,scc.avgscore
 FROM(SELECT sc.sno,student.sname,AVG(sc.score)AS avgscore
 FROM sc LEFT JOIN student USING(sno)
@@ -469,6 +485,7 @@ GROUP BY sc.sno)AS scc,(SELECT @curRank:=0) AS r
 ORDER BY scc.avgscore DESC,sno;
 
 # 49. 查詢所有學生的平均成績 並排名 , 學號,學生名,排名,平均成績(考慮並列) 對平均成績高到低及學號低到高排序
+# 古早時期沒有窗口函數的寫法 (請勿參考)
 SELECT scavg.sno,scavg.sname,CASE WHEN @prevRank=scavg.avgscore THEN @curRank
 WHEN @prevRank:=scavg.avgscore THEN @curRank:=@curRank+1 END AS rank,scavg.avgscore
 FROM  (SELECT sno,sname,AVG(score) AS avgscore FROM sc LEFT JOIN student USING(sno) GROUP BY sno)AS scavg , 
